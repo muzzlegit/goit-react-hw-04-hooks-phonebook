@@ -4,8 +4,8 @@ import PropTypes from 'prop-types';
 import { LabelWrap,FormWrap, ButtonWrap } from './ContactForm.styled';
 
 
-export default function ContactForm () {
-
+export default function ContactForm ({onSubmit}) {
+  
   const [name, setName] = useState('');
   const [number, setNumber] = useState('');
 
@@ -24,7 +24,7 @@ export default function ContactForm () {
   } 
   const handleSubmit = (event) => {
     event.preventDefault();
-
+    onSubmit(name, number);
   }
   return (
     <>        

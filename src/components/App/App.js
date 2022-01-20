@@ -1,6 +1,8 @@
 
-import React, { Component } from "react";
+import { useState, useEffect} from "react";
 import { nanoid } from 'nanoid';
+
+import useLocalStorage from "../../hooks/useLocalStorage";
 
 import ContactForm from '../ContactForm/ContactForm';
 import ContactList from '../ContactList/ContactList';
@@ -8,29 +10,19 @@ import Filter from "../Filter/Filter";
 
 import { Container, ContainerTitle, ContainerForm, ContainerSecondaryTitle } from './App.styled';
 
-class App extends Component {
-  state = {
-    contacts: [
-    ],
-    filter: ''
-  }
+export default function App() {
 
-  componentDidMount() {
-    const contacts =  JSON.parse(localStorage.getItem('contacts'));
-    if(contacts) {
-      this.setState({contacts: contacts});
-    }
-  }
+  const [contacts, setContacts] = useLocalStorage();
+  const [filter, setFilter] = useState('');
 
-  componentDidUpdate(prevProps, prevState) { 
-    if(prevState.contacts !== this.state.contacts) {
-      localStorage.setItem('contacts', JSON.stringify(this.state.contacts));
-    }
+  const checkContactsDuplicate = (name) => {
+    const normalizedName = name.toLowerCase();
+    return contacts.find(contact =>
+    contact.name.toLowerCase() === normalizedName);
   }
-
-  handleFormSubmit = ({name, number}) => {
-    if(this.checkContactsDuplicate(name)) {
-      alert('Ahtung!');
+  const handleFormSubmit = (name, number) => {
+    if(checkContactsDuplicate(name)) {
+      alert('contact is already there!');
       return;
     }
     const contact = {
@@ -38,50 +30,48 @@ class App extends Component {
       name,
       number
     }
-    this.setState(prevState => ({
-      contacts: [contact, ...prevState.contacts]
-    }));
+    setContacts(prevState => 
+      [contact, ...prevState]
+    );
   }
-
-  handleFilter = (event) => {
-    this.setState({filter: event.currentTarget.value});
+  const handleFilter = (event) => {
+    setFilter( event.currentTarget.value);
   }
-
-  contactsSearch = () => {
-    const normalizedFilter = this.state.filter.toLowerCase();
-    const requiredСontact = this.state.contacts.filter(contact =>
+  const contactsSearch = () => {
+    console.log(filter);
+    const normalizedFilter = filter.toLowerCase();
+    const requiredСontact = contacts.filter(contact =>
       contact.name.toLowerCase().includes(normalizedFilter)
     );
     return requiredСontact;
   }
-
-  deleteContact = (contactId) => {
-    this.setState(prevState => ({
-      contacts: prevState.contacts.filter(contact => contact.id !== contactId),
-    }));
+  const deleteContact = (contactId) => {
+    setContacts(prevState => {
+    return  prevState.filter(contact => contact.id !== contactId);
+    });
   }
+  return (
+    <Container>
+      <ContainerTitle>Phonebook</ContainerTitle>
+      <ContainerForm>
+        <ContactForm onSubmit={handleFormSubmit}/>
+        <ContainerSecondaryTitle>Contacts</ContainerSecondaryTitle>
+        <Filter value = {filter} onChange = {handleFilter}/>
+        <ContactList contacts = {contactsSearch()} onDeleteContact={deleteContact}/>
+      </ContainerForm>
+    </Container>
+  )
+  // componentDidMount() {
+  //   const contacts =  JSON.parse(localStorage.getItem('contacts'));
+  //   if(contacts) {
+  //     this.setState({contacts: contacts});
+  //   }
+  // }
 
-  checkContactsDuplicate = (name) => {
-      const normalizedName = name.toLowerCase();
-      return this.state.contacts.find(contact =>
-      contact.name.toLowerCase() === normalizedName);
-  }
-    
-  
-
-  render () {
-    return (
-      <Container>
-        <ContainerTitle>Phonebook</ContainerTitle>
-        <ContainerForm>
-          <ContactForm onSubmit={this.handleFormSubmit}/>
-          <ContainerSecondaryTitle>Contacts</ContainerSecondaryTitle>
-          <Filter value = {this.state.filter} onChange = {this.handleFilter}/>
-          <ContactList contacts = {this.contactsSearch()} onDeleteContact={this.deleteContact}/>
-        </ContainerForm>
-      </Container>
-    )
-  }
+  // componentDidUpdate(prevProps, prevState) { 
+  //   if(prevState.contacts !== this.state.contacts) {
+  //     localStorage.setItem('contacts', JSON.stringify(this.state.contacts));
+  //   }
+  // }
 }
 
-export default App;
